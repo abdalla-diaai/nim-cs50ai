@@ -1,10 +1,11 @@
-state = [1, 2, 3, 4]
-action = (0, 1)
+from nim import *
 
 
-q_values = {
-    (tuple(state), action) : 5
-}
+game = Nim()
+player = NimAI()
 
-for key in q_values.keys():
-    print(key)
+  # Keep track of current state and action
+state = game.piles.copy()
+action = player.choose_action(game.piles)
+
+print(player.choose_action(state))

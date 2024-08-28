@@ -3,7 +3,7 @@ import random
 import time
 
 
-class Nim():
+class Nim:
 
     def __init__(self, initial=[1, 3, 5, 7]):
         """
@@ -70,7 +70,7 @@ class Nim():
             self.winner = self.player
 
 
-class NimAI():
+class NimAI:
 
     def __init__(self, alpha=0.5, epsilon=0.1):
         """
@@ -107,8 +107,8 @@ class NimAI():
         if (state, action) in self.q.keys():
             return self.q[(state, action)]
         # return 0 if it does not exist
+        self.q[(state, action)] = 0
         return 0
-
 
     def update_q_value(self, state, action, old_q, reward, future_rewards):
         """
@@ -142,7 +142,11 @@ class NimAI():
         Q-value in `self.q`. If there are no available actions in
         `state`, return 0.
         """
-        raise NotImplementedError
+        available_actions = self.get_actions(state)
+        if available_actions:
+            if sum(available_actions.values()) > 0:
+                return max(available_actions.values())
+        return 0
 
     def choose_action(self, state, epsilon=True):
         """
@@ -152,6 +156,7 @@ class NimAI():
         available in the state (the one with the highest Q-value,
         using 0 for pairs that have no Q-values).
 
+
         If `epsilon` is `True`, then with probability
         `self.epsilon` choose a random available action,
         otherwise choose the best action available.
@@ -159,7 +164,30 @@ class NimAI():
         If multiple actions have the same Q-value, any of those
         options is an acceptable return value.
         """
-        raise NotImplementedError
+
+        available_actions = self.get_actions(state)
+        print(available_actions)
+        if epsilon and random.randint(0, 1) < self.epsilon:
+            # Choose a random action from available actions
+            if available_actions:
+                return random.choice(list(available_actions.keys()))[1]
+        return max(available_actions, key=available_actions.get)[1]
+
+    def get_actions(self, state):
+        state_action_pairs = {}
+        if not self.q:
+            actions = set()
+            for i, pile in enumerate(state):
+                for j in range(1, pile + 1):
+                    actions.add((i, j))
+            for action in actions:
+                state_action_pairs[(tuple(state), action)] = 0
+            return state_action_pairs
+        else:
+            for key, value in self.q.items():
+                if tuple(state) in key:
+                    state_action_pairs[key] = value
+            return state_action_pairs
 
 
 def train(n):
@@ -175,16 +203,14 @@ def train(n):
         game = Nim()
 
         # Keep track of last move made by either player
-        last = {
-            0: {"state": None, "action": None},
-            1: {"state": None, "action": None}
-        }
+        last = {0: {"state": None, "action": None}, 1: {"state": None, "action": None}}
 
         # Game loop
         while True:
 
             # Keep track of current state and action
             state = game.piles.copy()
+            print(game.piles)
             action = player.choose_action(game.piles)
 
             # Keep track of last state and action
@@ -202,7 +228,7 @@ def train(n):
                     last[game.player]["state"],
                     last[game.player]["action"],
                     new_state,
-                    1
+                    1,
                 )
                 break
 
@@ -212,7 +238,7 @@ def train(n):
                     last[game.player]["state"],
                     last[game.player]["action"],
                     new_state,
-                    0
+                    0,
                 )
 
     print("Done training")
